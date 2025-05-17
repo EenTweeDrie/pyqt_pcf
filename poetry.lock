@@ -1457,13 +1457,13 @@ test = ["pytest (>=7.2)", "pytest-cov (>=4.0)"]
 
 [[package]]
 name = "nuitka"
-version = "2.7.2"
+version = "2.7.3"
 description = "Python compiler with full language support and CPython compatibility"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "Nuitka-2.7.2.tar.gz", hash = "sha256:4e8d315d6cd5370ef346f1243849681170f649bc9f6e4c10310f58b60861ef1d"},
+    {file = "Nuitka-2.7.3.tar.gz", hash = "sha256:bd3dd12c5f0dfec0208f88c14ef3bbfc4ba3495eafc62c31b4e1f71171536e47"},
 ]
 
 [package.dependencies]
@@ -1913,7 +1913,7 @@ testing = ["docopt", "pytest"]
 
 [[package]]
 name = "pc-forestry"
-version = "0.3.2"
+version = "0.3.3"
 description = ""
 category = "main"
 optional = false
@@ -1938,7 +1938,7 @@ urllib3 = "<2.0"
 type = "git"
 url = "https://github.com/EenTweeDrie/pc_forestry.git"
 reference = "HEAD"
-resolved_reference = "cfd029e8ddc75776ec4c32fffdebd85a12c006b7"
+resolved_reference = "eccddc68ff3ad7c94921b0c40081d48d34aba889"
 
 [[package]]
 name = "pefile"

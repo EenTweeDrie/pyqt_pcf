@@ -55,11 +55,10 @@ def clicked_button(self):
         df_current = process(file_path)
         df = pd.concat([df, df_current])
 
-    df_tmp = df.copy()
-    for col in df_tmp.select_dtypes(include=['float64', 'int64']).columns:
-        df_tmp[col] = df_tmp[col].apply(lambda x: str(x).replace('.', ','))
-    df_tmp.to_csv(os.path.join(tmp_dir, "parameters.csv"),
-                  index=False, sep=';')
+    for col in df.select_dtypes(include=['float64', 'float32', 'int64', 'int32']).columns:
+        df[col] = df[col].apply(lambda x: str(x).replace('.', ','))
+    df.to_csv(os.path.join(tmp_dir, "parameters.csv"),
+              index=False, sep=';')
 
     self.add_file_to_list_widget(os.path.join(tmp_dir, "parameters.csv"))
 
@@ -68,6 +67,7 @@ def process(file_path: str):
     pc = TREE.read(file_path)
     pc.find_trunk_cluster(intensity_cut=3000, height_threshold=1.5)
     pc.estimate_diameter()
+    pc.estimate_height()
     diameter_LS_cos = pc.diameter_LS/pc.get_cos_angle()
     diameter_HLS_cos = pc.diameter_HLS/pc.get_cos_angle()
     return pd.DataFrame({'name': [pc.name],
@@ -79,4 +79,6 @@ def process(file_path: str):
                          'diameter_HLS': [pc.diameter_HLS],
                          'diameter_LS_cos': [diameter_LS_cos],
                          'diameter_HLS_cos': [diameter_HLS_cos],
-                         'angle': [pc.get_angle()]})
+                         'angle': [pc.get_angle()],
+                         'height': [pc.height]
+                         })
