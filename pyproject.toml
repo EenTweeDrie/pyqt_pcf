@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "pyqt-pcf"
+version = "0.1.0"
+description = ""
+authors = ["EenTweeDrie <eentweedrie@yandex.ru>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "pyqt_pcf"}]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+pc-forestry = {git = "https://github.com/EenTweeDrie/pc_forestry.git"}
+pyqt6 = "^6.9.0"
+pyopengl = "^3.1.9"
+pywavefront = "^1.3.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
