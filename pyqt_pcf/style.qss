@@ -1,119 +1,121 @@
 QMenuBar{
-    background-color: #3F3F46; /* Цвет фона элементов меню */
+    background-color: #53535A; /* Цвет фона элементов меню */
     color: #CCCEDB;
 }
 
 QMenuBar::item {
-    background-color: #3F3F46; /* Цвет фона элементов меню */
+    background-color: #53535A; /* Цвет фона элементов меню */
     color: #CCCEDB;
     padding-top: 4px;
     padding-right: 7px;
     padding-bottom: 4px;
     padding-left: 7px;
-    border: 1px solid #3F3F46; /* Границы флажка, когда выбран */
+    border: 1px solid #53535A; /* Границы флажка, когда выбран */
     border-radius: 7px; /* Скругление углов флажка */
 }
 
 QMenuBar::item:selected {
-    background-color: #52525a; /* Цвет фона выбранных элементов меню */ 
+    background-color: #66666E; /* Цвет фона выбранных элементов меню */ 
     color: #CCCEDB;
 }
 
 QMenu {
-    background-color: #3F3F46; /* Цвет фона подэлементов меню */
+    background-color: #53535A; /* Цвет фона подэлементов меню */
     color: #CCCEDB;
     border:none;
 }
 
 QMenu::item {
-    background-color: #3F3F46; /* Цвет фона подэлементов меню */
+    background-color: #53535A; /* Цвет фона подэлементов меню */
     color: #CCCEDB;
     padding-top: 4px;
     padding-right: 15px;
     padding-bottom: 4px;
     padding-left: 7px;
-    border: 1px solid #3F3F46; /* Границы флажка, когда выбран */
+    border: 1px solid #53535A; /* Границы флажка, когда выбран */
     border-radius: 7px; /* Скругление углов флажка */
     
 }
 
 QMenu::item:selected {
-    background-color: #52525a; /* Цвет фона выбранных подэлементов меню */
+    background-color: #66666E; /* Цвет фона выбранных подэлементов меню */
     color: #CCCEDB;
 }
 
 QMenu::item:pressed {
-    background-color: #66666d; /* Цвет фона выбранных подэлементов меню */
+    background-color: #7A7A81; /* Цвет фона выбранных подэлементов меню */
     color: #CCCEDB;
 }
 
 QAction::item{
-    background-color: #52525a; /* Цвет фона выбранных подэлементов меню */
+    background-color: #66666E; /* Цвет фона выбранных подэлементов меню */
     color: #CCCEDB;
 }
 
 QToolButton:hover {
-    background-color: #52525a;
+    background-color: #66666E;
 }
 
 QToolButton:pressed {
-    background-color: #66666d;
+    background-color: #7A7A81;
 }
 
 QToolBar{
-    background-color: #3F3F46; /* Цвет фона элементов меню */
+    background-color: #53535A; /* Цвет фона элементов меню */
     color: #CCCEDB;
     border: none; /* Полностью убрать границу */
 }
 
 QToolTip {
-    background-color: #494950; /* Цвет фона подсказки */
+    background-color: #5D5D64; /* Цвет фона подсказки */
     color: #CCCEDB;
+    border: 0 px solid #CCCEDB;
+    padding: 2px;
 }
 
 QMainWindow{
-    background-color: #3F3F46; /* Цвет фона главного окна */
+    background-color: #53535A; /* Цвет фона главного окна */
     color: #CCCEDB;
 }
 
 QPushButton{
-    background-color: #3F3F46; /* Цвет фона главного окна */
+    background-color: #53535A; /* Цвет фона главного окна */
     color: #CCCEDB;
 }
 
 QListWidget{
-    background-color: #3F3F46; /* Цвет фона главного окна */
+    background-color: #53535A; /* Цвет фона главного окна */
     color: #CCCEDB;
-    border: 2px solid #494950;
+    border: 2px solid #5D5D64;
     padding:5px;
 }
 
 QCheckBox {
-    background-color: #3F3F46; /* Цвет фона флажка */
+    background-color: #53535A; /* Цвет фона флажка */
     color: #CCCEDB; /* Цвет текста */
     spacing: 5px; /* Отступ между флажком и текстом */
 }
 
 QCheckBox:checked {
-    background-color: #3F3F46; /* Цвет фона флажка */
+    background-color: #53535A; /* Цвет фона флажка */
     color: #1E88E5; /* Цвет текста */
     spacing: 5px; /* Отступ между флажком и текстом */
 }
 
 QCheckBox::indicator:unchecked {
-    background-color: #494950; /* Цвет фона флажка, когда не выбран */
-    border: 1px solid #494950; /* Границы флажка, когда выбран */
+    background-color: #5D5D64; /* Цвет фона флажка, когда не выбран */
+    border: 1px solid #5D5D64; /* Границы флажка, когда выбран */
     border-radius: 3px; /* Скругление углов флажка */
 }
 
 QCheckBox::indicator:pressed {
-    background-color: #52525a; /* Цвет фона флажка, когда выбран */
-    border: 1px solid #52525a; /* Границы флажка, когда выбран */
+    background-color: #66666E; /* Цвет фона флажка, когда выбран */
+    border: 1px solid #66666E; /* Границы флажка, когда выбран */
     border-radius: 3px; /* Скругление углов флажка */
 }
 
 QCheckBox::indicator:checked {
-    background-color: #66666d; /* Цвет фона флажка, когда выбран */
+    background-color: #7A7A81; /* Цвет фона флажка, когда выбран */
     border: 1px solid #1E88E5; /* Границы флажка, когда выбран */
     border-radius: 3px; /* Скругление углов флажка */
     image: url(images/check1.png);
@@ -122,71 +124,80 @@ QCheckBox::indicator:checked {
 }
 
 QScrollBar:horizontal {
-    background: #3F3F46; /* Цвет фона вертикальной полосы прокрутки */
+    background: #53535A; /* Цвет фона вертикальной полосы прокрутки */
 }
 
 QScrollBar:vertical {
-    background: #3F3F46; /* Цвет фона вертикальной полосы прокрутки */
+    background: #53535A; /* Цвет фона вертикальной полосы прокрутки */
 }
 
 QLabel{
-    background-color: #3F3F46; /* Цвет фона главного окна */
+    background-color: #53535A; /* Цвет фона главного окна */
     color: #CCCEDB;
 }
 
 QDockWidget{
-    background-color: #494950;
+    background-color: #5D5D64;
     color: #CCCEDB;
 }
 
 QDockWidget::title {
     text-align: left;
-    background-color: #494950;  /* Цвет фона шапки */
+    background-color: #5D5D64;  /* Цвет фона шапки */
     padding: 1px;
     color: #CCCEDB;
 }
 
 QDockWidget::close-button, QDockWidget::float-button {
-    background-color: #494950;
+    background-color: #5D5D64;
     border-color:#CCCEDB;
 }
 
 QDockWidget::close-button:hover, QDockWidget::float-button:hover {
-    background-color: #52525a;
+    background-color: #66666E;
 }
 
 QDockWidget::close-button:pressed, QDockWidget::float-button:pressed {
-    background-color: #66666d;
+    background-color: #7A7A81;
 }
 
 QPlainTextEdit{
-    background-color: #3F3F46;
+    background-color: #53535A;
     color: #CCCEDB;
     margin: 10px;
-    border: 2px solid #494950;
+    border: 2px solid #5D5D64;
 }
 
 QLineEdit{
-    background-color: #494950;
+    background-color: #5D5D64;
     color: #CCCEDB;
     border:none;
 }
 
 QRadioButton{
-    background-color: #494950;
+    background-color: #5D5D64;
     color: #CCCEDB;
 }
 
 QComboBox {
-    background-color: #494950;
+    background-color: #5D5D64;
     color: #CCCEDB;
     border:none;
 }
 QComboBox QAbstractItemView {
-    background-color: #494950;   /* Цвет фона элементов */
+    background-color: #5D5D64;   /* Цвет фона элементов */
     color: #CCCEDB;              /* Цвет текста элементов */
 }
 QComboBox QAbstractItemView::item:selected {
-    background-color: #52525a;   /* Цвет фона выбранного элемента */
+    background-color: #66666E;   /* Цвет фона выбранного элемента */
     color: #CCCEDB;
+}
+
+QMessageBox {
+    background-color: #3F3F46;
+}
+
+QMessageBox QLabel {
+    background-color: #3F3F46;
+    color: #FFFFFF;
 }

@@ -4,12 +4,14 @@ import pandas as pd
 from OpenGL.GL import glDeleteBuffers
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QListWidgetItem, QCheckBox, QApplication, QLabel
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QListWidgetItem, QCheckBox, QApplication, QLabel, QPushButton, QMessageBox
 from config import base_path
 from Toolbar_Widgets.design import Ui_MainWindow
 from Toolbar_Widgets.console_manager import ConsoleManager
 from menu_bar import MenuBar
 from Toolbar.tool_bar import ToolBar
+from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem
+
 
 from Toolbar_Widgets import example_widget
 
@@ -52,6 +54,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.menuCreator.saveAction.triggered.connect(self.save_selected_tree)
         self.menuCreator.exitAction.triggered.connect(
             QApplication.instance().quit)
+        self.menuCreator.aboutAction.triggered.connect(self.show_about_dialog)
 
         self.toolbarsCreator.exampleAction.triggered.connect(
             lambda: self.toggle_dock_widget(
@@ -60,18 +63,15 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             )
         )
 
-        self.toolbarsCreator.frontViewAction.triggered.connect(
-            lambda: self.openGLWidget.set_view_parameters(1, 1, 1))
-        self.toolbarsCreator.backViewAction.triggered.connect(
-            lambda: self.openGLWidget.set_view_parameters(1, 180, 1))
-        self.toolbarsCreator.leftSideViewAction.triggered.connect(
-            lambda: self.openGLWidget.set_view_parameters(1, 90, 1))
-        self.toolbarsCreator.rightSideViewAction.triggered.connect(
-            lambda: self.openGLWidget.set_view_parameters(1, 270, 1))
-        self.toolbarsCreator.topViewAction.triggered.connect(
-            lambda: self.openGLWidget.set_view_parameters(90, 1, 1))
-        self.toolbarsCreator.bottomViewAction.triggered.connect(
-            lambda: self.openGLWidget.set_view_parameters(270, 1, 1))
+        self.toolbarsCreator.frontViewAction.triggered.connect(lambda: self.openGLWidget.set_view_parameters(1, 1, 1))
+        self.toolbarsCreator.backViewAction.triggered.connect(lambda: self.openGLWidget.set_view_parameters(1, 180, 1))
+        self.toolbarsCreator.leftSideViewAction.triggered.connect(lambda: self.openGLWidget.set_view_parameters(1, 90, 1))
+        self.toolbarsCreator.rightSideViewAction.triggered.connect(lambda: self.openGLWidget.set_view_parameters(1, 270, 1))
+        self.toolbarsCreator.topViewAction.triggered.connect(lambda: self.openGLWidget.set_view_parameters(90, 1, 1))
+        self.toolbarsCreator.bottomViewAction.triggered.connect(lambda: self.openGLWidget.set_view_parameters(270, 1, 1))
+        self.toolbarsCreator.increaseSizeAction.triggered.connect(self.openGLWidget.increase_point_size)
+        self.toolbarsCreator.decreaseSizeAction.triggered.connect(self.openGLWidget.decrease_point_size)
+        self.toolbarsCreator.focusAction.triggered.connect(self.focus_on_selected_item)
 
         # Подключаем кнопку и обработчик
         self.select_all_button.clicked.connect(self.toggle_select_all)
@@ -84,7 +84,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.properties_dock = None
         self.properties_widget = None
 
-        self.init_dock_widgets()
+    def show_about_dialog(self):
+        QMessageBox.about(self, "О приложении", "LIDAR pcf segmentation v0.1.4")
 
     def select_files(self):
         # Метод для выбора файлов
@@ -128,8 +129,33 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     def remove_selected_items(self):
         # Метод для удаления выбранных элементов
         items = []
+        selected_count = 0
+
+        # Подсчитываем количество выбранных элементов
         for index in range(self.listWidget.count()):
-            items.append(self.listWidget.item(index))
+            item = self.listWidget.item(index)
+            items.append(item)
+            checkbox = self.listWidget.itemWidget(item)
+            if checkbox and checkbox.isChecked():
+                selected_count += 1
+
+        # Если нет выбранных элементов, выходим
+        if selected_count == 0:
+            return
+
+        # Показываем диалог подтверждения
+        from PyQt6.QtWidgets import QMessageBox
+        reply = QMessageBox.question(
+            self,
+            'Подтверждение удаления',
+            f'Вы уверены, что хотите удалить {selected_count} выбранных элементов?',
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        # Если пользователь не подтвердил удаление, выходим
+        if reply != QMessageBox.StandardButton.Yes:
+            return
 
         # Проходим в обратном порядке по всем элементам и удаляем выбранные
         for item in reversed(items):
@@ -157,6 +183,35 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         # Обновляем отображение в OpenGLWidget
         self.openGLWidget.update()
 
+    def focus_on_selected_item(self):
+        # Сначала проверяем текущий выделенный элемент
+        currentItem = self.listWidget.currentItem()
+        if currentItem:
+            checkbox = self.listWidget.itemWidget(currentItem)
+            if checkbox and checkbox.isChecked():
+                file_path = checkbox.property("filePath")
+                if file_path:
+                    self.openGLWidget.focus_on_object(file_path)
+                    return
+
+        # Если выделенный элемент не подходит, ищем единственный отмеченный
+        checked_files = []
+        for index in range(self.listWidget.count()):
+            item = self.listWidget.item(index)
+            checkbox = self.listWidget.itemWidget(item)
+            if checkbox and checkbox.isChecked():
+                checked_files.append(checkbox.property("filePath"))
+
+        if len(checked_files) == 1:
+            file_path = checked_files[0]
+            self.openGLWidget.focus_on_object(file_path)
+            return
+
+        if len(checked_files) > 1:
+            print("Отмечено несколько элементов. Выделите один для фокусировки.")
+        else:  # len(checked_files) == 0
+            print("Нет активных элементов для фокусировки.")
+
     def delete_vbo(self, vbo_info):
         # vbo_info предполагается быть кортежем (point_vbo, color_vbo, _)
         point_vbo, color_vbo, _ = vbo_info
@@ -179,13 +234,11 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
             elif state == 0:  # Checkbox is unchecked
                 if file_path in self.openGLWidget.point_clouds:
-                    self.openGLWidget.point_clouds[file_path] = {
-                        'active': False, 'data': None}
+                    self.openGLWidget.point_clouds[file_path]['active'] = False
                     self.openGLWidget.update()
                     self.clear_properties_dock()
                 elif file_path in self.openGLWidget.models:
-                    self.openGLWidget.models[file_path] = {
-                        'active': False, 'data': None}
+                    self.openGLWidget.models[file_path]['active'] = False
                     self.openGLWidget.update()
                     self.clear_properties_dock()
 
@@ -193,11 +246,9 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         if file_path in self.openGLWidget.point_clouds:
             if self.openGLWidget.point_clouds[file_path]['active']:
                 num_points = self.openGLWidget.vbo_data[file_path][2]
-
                 self.clear_properties_dock()
                 file_label = QLabel(f"Файл: {os.path.basename(file_path)}")
                 num_points_label = QLabel(f"Количество точек: {num_points}")
-
                 self.properties_layout.addWidget(file_label)
                 self.properties_layout.addWidget(num_points_label)
         if file_path in self.openGLWidget.models:
@@ -219,18 +270,26 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     widget.setParent(None)
 
     def toggle_dock_widget(self, dock_widget_name, dock_area):
-        dock_widget = self.dock_widgets.get(dock_widget_name)
-        # Сначала проверяем, открыт ли данный виджет
-        if dock_widget.isVisible():
-            # Если виджет уже открыт и видим, просто его скрываем
-            dock_widget.hide()
+        if dock_widget_name not in self.dock_widgets:
+            # Создаем виджет, если его нет (ленивая инициализация)
+            if dock_widget_name == 'example':
+                # Создание и настройка виджета
+                new_dock = example_widget.example_dock_widget(self)
+                self.addDockWidget(dock_area, new_dock)
+                new_dock.setFloating(True)
+                self.dock_widgets[dock_widget_name] = new_dock
+                new_dock.show()
+                new_dock.raise_()
+                new_dock.activateWindow()
         else:
-            # Если виджет закрыт, скрываем все остальные виджеты
-            for widget in self.dock_widgets.values():
-                widget.hide()
-            # И отображаем нужный виджет
-            self.addDockWidget(dock_area, dock_widget)
-            dock_widget.show()
+            # Если виджет уже существует, просто переключаем его видимость
+            dock_widget = self.dock_widgets.get(dock_widget_name)
+            if dock_widget.isVisible():
+                dock_widget.hide()
+            else:
+                dock_widget.show()
+                dock_widget.raise_()
+                dock_widget.activateWindow()
 
     def save_single_file(self, file_path):
         print("from:", file_path)

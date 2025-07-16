@@ -1883,7 +1883,7 @@ testing = ["docopt", "pytest"]
 
 [[package]]
 name = "pc-forestry"
-version = "0.3.4"
+version = "0.3.5"
 description = ""
 category = "main"
 optional = false
@@ -1908,7 +1908,7 @@ urllib3 = "<2.0"
 type = "git"
 url = "https://github.com/EenTweeDrie/pc_forestry.git"
 reference = "HEAD"
-resolved_reference = "35a4a1017a8e92af4af52c2d52810cdd8bfff504"
+resolved_reference = "d0dab3bede166e30eefbbe49145c29f08ad84786"
 
 [[package]]
 name = "pefile"

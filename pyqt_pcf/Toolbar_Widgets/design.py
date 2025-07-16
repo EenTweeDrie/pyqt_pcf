@@ -31,6 +31,10 @@ class Ui_MainWindow(object):
 
         MainWindow.setCentralWidget(self.centralwidget)
 
+        self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
         # Стыковочные виджеты
@@ -66,29 +70,34 @@ class Ui_MainWindow(object):
         widget = QWidget()
         layout = QVBoxLayout()  # Используем вертикальную компоновку
 
-        # Добавляем QListWidget
-        self.listWidget = QListWidget()
-        layout.addWidget(self.listWidget)
-
         # Создаем горизонтальную компоновку для кнопок
         buttons_layout = QHBoxLayout()
 
         # Добавляем кнопку "Выбрать всё"
         self.select_all_button = QPushButton("Выбрать всё")
+        self.select_all_button.setShortcut("Ctrl+A")
+        self.select_all_button.setToolTip("Ctrl+A")
         buttons_layout.addWidget(self.select_all_button)
 
         # Добавляем кнопку "Удалить"
         self.remove_button = QPushButton("Удалить")
+        self.remove_button.setShortcut("Ctrl+D")
+        self.remove_button.setToolTip("Ctrl+D")
         buttons_layout.addWidget(self.remove_button)
 
         # Добавляем горизонтальную компоновку кнопок в вертикальную компоновку
         layout.addLayout(buttons_layout)
+
+        # Добавляем QListWidget
+        self.listWidget = QListWidget()
+        layout.addWidget(self.listWidget)
 
         widget.setLayout(layout)
         dock.setWidget(widget)
         return dock
 
     def add_file_to_list_widget(self, file_path):
+        print(6)
         # Добавляем облако точек земли в list_widget
         ground_item = QListWidgetItem(self.listWidget)
         ground_checkbox = QCheckBox(os.path.basename(file_path))

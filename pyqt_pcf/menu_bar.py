@@ -1,10 +1,17 @@
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QMenuBar, QMenu
+import os
+from pathlib import Path
+
 
 class MenuBar:
     def __init__(self, parent=None):
         self.parent = parent
-        
+        self.openAction = None
+        self.saveAction = None
+        self.exitAction = None
+        self.aboutAction = None
+
     def create_menu_bar(self):
         menuBar = QMenuBar(self.parent)
         self.parent.setMenuBar(menuBar)
@@ -25,11 +32,18 @@ class MenuBar:
         helpMenu = menuBar.addMenu("Помощь")
         helpMenu.addAction(self.helpContentAction)
         helpMenu.addAction(self.aboutAction)
-        
+
     def create_actions(self):
         self.openAction = QAction("Открыть", self.parent)
+        self.openAction.setShortcut("Ctrl+O")
         self.saveAction = QAction("Сохранить", self.parent)
-        self.exitAction = QAction("Выйти", self.parent)
+        self.saveAction.setShortcut("Ctrl+S")
+        self.exitAction = QAction(
+            "Выход", self.parent)
+        self.exitAction.setShortcut("Ctrl+Q")
+        self.exitAction.setStatusTip("Выход из приложения")
+
+        self.aboutAction = QAction("О приложении", self.parent)
         # Действия в меню "Правка"
         self.colorAction = QAction("Цвет", self.parent)
         # Действия в подменю "Цвет"

@@ -30,27 +30,26 @@ class ToolBar:
         interactionToolBar.addAction(self.rightSideViewAction)
         interactionToolBar.addAction(self.topViewAction)
         interactionToolBar.addAction(self.bottomViewAction)
+        interactionToolBar.addAction(self.focusAction)
+        interactionToolBar.addAction(self.increaseSizeAction)
+        interactionToolBar.addAction(self.decreaseSizeAction)
         self.parent.addToolBar(
             Qt.ToolBarArea.LeftToolBarArea, interactionToolBar)
 
     def create_actions(self):
         # Действия для панели инструментов "Панель управленя взаимодействием"
-        # Пример!!!
         self.exampleAction = QAction(
             QIcon(os.path.join(base_path, "images/example.png")),
-            "Пример", self.parent
+            "Рассчет параметров (Ctrl+P)", self.parent
         )
-
+        self.exampleAction.setShortcut("Ctrl+P")
         # Действия для панели инструментов "Панель управления вращения"
-        self.frontViewAction = QAction(QIcon(os.path.join(
-            base_path, "images/FrontView.png")), "Вид спереди", self.parent)
-        self.backViewAction = QAction(QIcon(os.path.join(
-            base_path, "images/BackView.png")), "Вид сзади", self.parent)
-        self.leftSideViewAction = QAction(QIcon(os.path.join(
-            base_path, "images/SideViewLeft.png")), "Вид сбоку", self.parent)
-        self.rightSideViewAction = QAction(QIcon(os.path.join(
-            base_path, "images/SideViewRight.png")), "Вид сбоку", self.parent)
-        self.topViewAction = QAction(QIcon(os.path.join(
-            base_path, "images/TopView.png")), "Вид сверху", self.parent)
-        self.bottomViewAction = QAction(QIcon(os.path.join(
-            base_path, "images/BottomView.png")), "Вид снизу", self.parent)
+        self.increaseSizeAction = QAction(QIcon(os.path.join(base_path, "images/plus.png")), "Увеличить", self.parent)
+        self.decreaseSizeAction = QAction(QIcon(os.path.join(base_path, "images/minus.png")), "Уменьшить", self.parent)
+        self.focusAction = QAction(QIcon(os.path.join(base_path, "images/arrow.png")), "Фокус", self.parent)
+        self.frontViewAction = QAction(QIcon(os.path.join(base_path, "images/FrontView.png")), "Вид спереди", self.parent)
+        self.backViewAction = QAction(QIcon(os.path.join(base_path, "images/BackView.png")), "Вид сзади", self.parent)
+        self.leftSideViewAction = QAction(QIcon(os.path.join(base_path, "images/SideViewLeft.png")), "Вид сбоку", self.parent)
+        self.rightSideViewAction = QAction(QIcon(os.path.join(base_path, "images/SideViewRight.png")), "Вид сбоку", self.parent)
+        self.topViewAction = QAction(QIcon(os.path.join(base_path, "images/TopView.png")), "Вид сверху", self.parent)
+        self.bottomViewAction = QAction(QIcon(os.path.join(base_path, "images/BottomView.png")), "Вид снизу", self.parent)
