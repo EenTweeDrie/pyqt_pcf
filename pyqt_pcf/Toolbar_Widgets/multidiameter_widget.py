@@ -26,7 +26,9 @@ def multidiameter_dock_widget(self):
 
 def process(file_path: str, params: dict):
     pc = TREE.read(file_path)
-    pc.find_trunk_ml()
+    model_path = os.path.join(os.path.dirname(__file__),
+                              '..', '..', '..', 'pc_forestry', 'predict', 'checkpoints', 'catboost_model.pkl')
+    pc.find_trunk_ml(model_path=model_path)
     pc.estimate_multi_trunk_diameters()
     if pc.multi_trunk_diameters_df is None:
         center = pd.DataFrame([{'xc': np.nan, 'yc': np.nan, 'diameter_cm': np.nan}])
