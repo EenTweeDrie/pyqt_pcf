@@ -186,6 +186,7 @@ tmp
 *.h5
 *.txt
 *.csv
+*.xlsx
 
 dist
 build   

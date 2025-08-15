@@ -12,9 +12,8 @@ from menu_bar import MenuBar
 from Toolbar.tool_bar import ToolBar
 from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem
 
-
-from Toolbar_Widgets import example_widget
-
+from Toolbar_Widgets import parameters_widget
+from Toolbar_Widgets import multidiameter_widget
 from pc_forestry.pcd.PCD import PCD
 from pc_forestry.pcd.TREE import TREE
 import shutil
@@ -56,11 +55,11 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             QApplication.instance().quit)
         self.menuCreator.aboutAction.triggered.connect(self.show_about_dialog)
 
-        self.toolbarsCreator.exampleAction.triggered.connect(
-            lambda: self.toggle_dock_widget(
-                'example',  # ключ из init_dock_widgets
-                Qt.DockWidgetArea.LeftDockWidgetArea
-            )
+        self.toolbarsCreator.parametersAction.triggered.connect(
+            lambda: self.toggle_dock_widget('parameters', Qt.DockWidgetArea.LeftDockWidgetArea)
+        )
+        self.toolbarsCreator.multidiameterAction.triggered.connect(
+            lambda: self.toggle_dock_widget('multidiameter', Qt.DockWidgetArea.LeftDockWidgetArea)
         )
 
         self.toolbarsCreator.frontViewAction.triggered.connect(lambda: self.openGLWidget.set_view_parameters(1, 1, 1))
@@ -270,34 +269,51 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     widget.setParent(None)
 
     def toggle_dock_widget(self, dock_widget_name, dock_area):
+        action = None
+        if dock_widget_name == 'parameters':
+            action = self.toolbarsCreator.parametersAction
+        elif dock_widget_name == 'multidiameter':
+            action = self.toolbarsCreator.multidiameterAction
+
         if dock_widget_name not in self.dock_widgets:
-            # Создаем виджет, если его нет (ленивая инициализация)
-            if dock_widget_name == 'example':
-                # Создание и настройка виджета
-                new_dock = example_widget.example_dock_widget(self)
+            if dock_widget_name in ['parameters', 'multidiameter']:
+                if dock_widget_name == 'parameters':
+                    new_dock = parameters_widget.parameters_dock_widget(self)
+                elif dock_widget_name == 'multidiameter':
+                    new_dock = multidiameter_widget.multidiameter_dock_widget(self)
+
                 self.addDockWidget(dock_area, new_dock)
                 new_dock.setFloating(True)
                 self.dock_widgets[dock_widget_name] = new_dock
                 new_dock.show()
                 new_dock.raise_()
                 new_dock.activateWindow()
+                if action:
+                    action.setChecked(True)
+
+                # Привязываем обработчик закрытия
+                new_dock.visibilityChanged.connect(lambda visible, a=action: a.setChecked(visible) if a else None)
+
         else:
-            # Если виджет уже существует, просто переключаем его видимость
             dock_widget = self.dock_widgets.get(dock_widget_name)
             if dock_widget.isVisible():
                 dock_widget.hide()
+                if action:
+                    action.setChecked(False)
             else:
                 dock_widget.show()
                 dock_widget.raise_()
                 dock_widget.activateWindow()
+                if action:
+                    action.setChecked(True)
 
     def save_single_file(self, file_path):
         print("from:", file_path)
         save_path, _ = QFileDialog.getSaveFileName(self, "Сохранить выбранный файл", "",
-                                                   "PointCloud files (*.las *.pcd *.laz *.h5 *.txt);; CSV Files (*.csv)")
+                                                   "Excel Files (*.xlsx);; PointCloud files (*.las *.pcd *.laz *.h5 *.txt)")
         print("to:", save_path)
         if save_path:
-            if save_path.endswith('.csv'):
+            if save_path.endswith('.xlsx'):
                 shutil.copy(file_path, save_path)
                 print(f"Файл: {file_path} сохранён как: {save_path}")
             else:
@@ -312,7 +328,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             for file_path in file_paths:
                 file_name = os.path.basename(file_path)
                 output_path = os.path.join(save_dir, file_name)
-                if file_path.endswith('.csv'):
+                if file_path.endswith('.xlsx'):
                     shutil.copy(file_path, output_path)
                     print(f"Файл: {file_path} сохранён как: {output_path}")
                 else:
@@ -321,7 +337,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     print(f"Файл: {file_path} сохранён как: {output_path}")
 
     def save_selected_tree(self):
-
         selected_files = []
         for index in range(self.listWidget.count()):
             item = self.listWidget.item(index)

@@ -16,8 +16,8 @@ class ToolBar:
         editToolBar = QToolBar(
             "Панель управления взаимодействием", self.parent)
 
-        # Пример!!!
-        editToolBar.addAction(self.exampleAction)  # ← добавили
+        editToolBar.addAction(self.parametersAction)
+        editToolBar.addAction(self.multidiameterAction)
 
         self.parent.addToolBar(editToolBar)
 
@@ -38,11 +38,19 @@ class ToolBar:
 
     def create_actions(self):
         # Действия для панели инструментов "Панель управленя взаимодействием"
-        self.exampleAction = QAction(
-            QIcon(os.path.join(base_path, "images/example.png")),
-            "Рассчет параметров (Ctrl+P)", self.parent
+        self.parametersAction = QAction(
+            QIcon(os.path.join(base_path, "images/parameter.png")),
+            "Расчет параметров (Ctrl+P)", self.parent
         )
-        self.exampleAction.setShortcut("Ctrl+P")
+        self.parametersAction.setCheckable(True)
+        self.parametersAction.setShortcut("Ctrl+P")
+
+        self.multidiameterAction = QAction(
+            QIcon(os.path.join(base_path, "images/multidiameter.png")),
+            "Расчет многодиаметральных параметров (Ctrl+M)", self.parent)
+        self.multidiameterAction.setCheckable(True)
+        self.multidiameterAction.setShortcut("Ctrl+M")
+
         # Действия для панели инструментов "Панель управления вращения"
         self.increaseSizeAction = QAction(QIcon(os.path.join(base_path, "images/plus.png")), "Увеличить", self.parent)
         self.decreaseSizeAction = QAction(QIcon(os.path.join(base_path, "images/minus.png")), "Уменьшить", self.parent)

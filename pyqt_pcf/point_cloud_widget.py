@@ -62,7 +62,7 @@ class OpenGLWidget(QOpenGLWidget):
             return
 
         try:
-            pc = PCD.read(filename, verbose=False)
+            pc = PCD.read(filename)
         except Exception as e:
             print(f"Ошибка при загрузке файла {filename}: {e}")
             if not self.point_clouds[filename]['data']:

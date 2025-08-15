@@ -201,3 +201,8 @@ QMessageBox QLabel {
     background-color: #3F3F46;
     color: #FFFFFF;
 }
+
+QTextEdit{
+    background-color: #66666E;
+    color: white;
+}

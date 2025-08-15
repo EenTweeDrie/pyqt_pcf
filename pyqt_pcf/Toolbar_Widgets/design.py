@@ -8,7 +8,7 @@ from point_cloud_widget import OpenGLWidget
 from PyQt6.QtCore import Qt
 
 # Пример!!!
-from Toolbar_Widgets import example_widget
+from Toolbar_Widgets import parameters_widget
 
 
 class Ui_MainWindow(object):
@@ -51,7 +51,7 @@ class Ui_MainWindow(object):
 
     def init_dock_widgets(self):
         self.dock_widgets = {
-            'example': example_widget.example_dock_widget(self)  # ← наш виджет
+            'parameters': parameters_widget.parameters_dock_widget(self)  # ← наш виджет
         }
 
     def properties_dock_widget(self):
@@ -97,7 +97,6 @@ class Ui_MainWindow(object):
         return dock
 
     def add_file_to_list_widget(self, file_path):
-        print(6)
         # Добавляем облако точек земли в list_widget
         ground_item = QListWidgetItem(self.listWidget)
         ground_checkbox = QCheckBox(os.path.basename(file_path))
