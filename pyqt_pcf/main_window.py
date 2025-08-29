@@ -2,8 +2,8 @@ import os
 import open3d as o3d
 import pandas as pd
 from OpenGL.GL import glDeleteBuffers
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtGui import QIcon, QDragEnterEvent, QDropEvent
 from PyQt6.QtWidgets import QMainWindow, QFileDialog, QListWidgetItem, QCheckBox, QApplication, QLabel, QPushButton, QMessageBox
 from config import base_path
 from Toolbar_Widgets.design import Ui_MainWindow
@@ -83,6 +83,9 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.properties_dock = None
         self.properties_widget = None
 
+        # Включаем поддержку drag and drop
+        self.setAcceptDrops(True)
+
     def show_about_dialog(self):
         QMessageBox.about(self, "О приложении", "LIDAR pcf segmentation v0.1.4")
 
@@ -91,23 +94,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         files, _ = QFileDialog.getOpenFileNames(
             self, "Выбрать файлы", "", "PointCloud files (*.las *.pcd *.laz *.h5 *.txt)")
         if files:
-            for file in files:
-                # Создание нового элемента QListWidgetItem
-                item = QListWidgetItem(self.listWidget)
-
-                # Создание чекбокса с именем файла
-                checkbox = QCheckBox(os.path.basename(file))
-                checkbox.setChecked(False)
-
-                checkbox.setProperty("filePath", file)
-                print(f"Загружен файл: {file}")
-
-                # Добавляем чекбокс в элемент QListWidgetItem
-                self.listWidget.setItemWidget(item, checkbox)
-                # Устанавливаем размер элемента списка для чекбокса
-                item.setSizeHint(checkbox.sizeHint())
-
-                checkbox.stateChanged.connect(self.checkbox_changed)
+            self.add_files_to_list(files)
 
     def toggle_select_all(self):
         # Метод для переключения всех чекбоксов
@@ -181,6 +168,9 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         # Обновляем отображение в OpenGLWidget
         self.openGLWidget.update()
+
+        # Если список стал пустым, показываем сообщение-подсказку
+        self.update_empty_list_message()
 
     def focus_on_selected_item(self):
         # Сначала проверяем текущий выделенный элемент
@@ -352,3 +342,98 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             self.save_single_file(selected_files[0])
         else:
             self.save_multiple_files(selected_files)
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        """Обработка события входа перетаскиваемых данных"""
+        if event.mimeData().hasUrls():
+            # Проверяем, есть ли среди перетаскиваемых объектов файлы
+            urls = event.mimeData().urls()
+            valid_files = []
+
+            for url in urls:
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    # Проверяем расширение файла
+                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt')):
+                        valid_files.append(file_path)
+
+            if valid_files:
+                event.acceptProposedAction()
+                return
+
+        event.ignore()
+
+    def dragMoveEvent(self, event):
+        """Обработка события перемещения при перетаскивании"""
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event: QDropEvent):
+        """Обработка события сброса файлов"""
+        if event.mimeData().hasUrls():
+            urls = event.mimeData().urls()
+            valid_files = []
+
+            for url in urls:
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    # Проверяем расширение файла
+                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt')):
+                        valid_files.append(file_path)
+
+            if valid_files:
+                self.add_files_to_list(valid_files)
+                event.acceptProposedAction()
+                print(f"Перетащено файлов: {len(valid_files)}")
+            else:
+                print("Нет поддерживаемых файлов для загрузки")
+                event.ignore()
+        else:
+            event.ignore()
+
+    def add_files_to_list(self, files):
+        """Добавляет файлы в список (используется как для drag&drop, так и для обычного выбора)"""
+        for file in files:
+            # Проверяем, не добавлен ли уже этот файл
+            file_already_exists = False
+            for index in range(self.listWidget.count()):
+                item = self.listWidget.item(index)
+                checkbox = self.listWidget.itemWidget(item)
+                if checkbox and checkbox.property("filePath") == file:
+                    file_already_exists = True
+                    break
+
+            if not file_already_exists:
+                # Создание нового элемента QListWidgetItem
+                item = QListWidgetItem(self.listWidget)
+
+                # Создание чекбокса с именем файла
+                checkbox = QCheckBox(os.path.basename(file))
+                checkbox.setChecked(False)
+
+                checkbox.setProperty("filePath", file)
+                print(f"Загружен файл: {file}")
+
+                # Добавляем чекбокс в элемент QListWidgetItem
+                self.listWidget.setItemWidget(item, checkbox)
+                # Устанавливаем размер элемента списка для чекбокса
+                item.setSizeHint(checkbox.sizeHint())
+
+                checkbox.stateChanged.connect(self.checkbox_changed)
+            else:
+                print(f"Файл уже добавлен: {os.path.basename(file)}")
+
+        # Переключаемся на список файлов после добавления файлов
+        self.clear_empty_list_message()
+
+    def clear_empty_list_message(self):
+        """Переключается на список файлов, если есть файлы"""
+        if hasattr(self, 'files_stack') and self.listWidget.count() > 0:
+            self.files_stack.setCurrentWidget(self.listWidget)
+
+    def update_empty_list_message(self):
+        """Показывает виджет пустого состояния, если нет файлов"""
+        if hasattr(self, 'files_stack') and self.listWidget.count() == 0:
+            self.files_stack.setCurrentWidget(self.empty_state_widget)

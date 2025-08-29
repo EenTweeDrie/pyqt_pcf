@@ -2,13 +2,186 @@ import os
 
 from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtWidgets import (QHBoxLayout, QListWidget, QDockWidget,
-                             QListWidgetItem, QCheckBox, QVBoxLayout, QWidget, QPushButton)
+                             QListWidgetItem, QCheckBox, QVBoxLayout, QWidget, QPushButton, QLabel, QStackedWidget)
+from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QFont, QPixmap
 
 from point_cloud_widget import OpenGLWidget
-from PyQt6.QtCore import Qt
+from config import base_path
 
 # Пример!!!
 from Toolbar_Widgets import parameters_widget
+
+
+class EmptyStateWidget(QWidget):
+    """Виджет для отображения пустого состояния с drag and drop подсказкой"""
+
+    def __init__(self, main_window=None, parent=None):
+        super().__init__(parent)
+        self.main_window = main_window
+        self.setAcceptDrops(True)
+        self.setup_ui()
+
+    def setup_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Иконка файла
+        icon_label = QLabel()
+        icon_path = os.path.join(base_path, "images", "generated-image(3).png")
+        pixmap = QPixmap(icon_path)
+        if not pixmap.isNull():
+            # Масштабируем иконку до размера 72x72 пикселя с сохранением пропорций
+            scaled_pixmap = pixmap.scaled(72, 72, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            icon_label.setPixmap(scaled_pixmap)
+        else:
+            # Если иконка не найдена, используем текст как fallback
+            icon_label.setText("📁")
+            icon_font = QFont()
+            icon_font.setPointSize(72)
+            icon_label.setFont(icon_font)
+
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # Применяем прозрачность через стиль
+        icon_label.setStyleSheet("color: rgba(136, 136, 136, 0.3); opacity: 0.3;")
+        layout.addWidget(icon_label)
+
+        # Основной текст
+        main_label = QLabel("Перетащите файлы сюда")
+        main_font = QFont()
+        main_font.setPointSize(18)
+        main_font.setBold(True)
+        main_label.setFont(main_font)
+        main_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        main_label.setStyleSheet("color: #888888; margin: 20px 0px;")
+        layout.addWidget(main_label)
+
+        # Дополнительный текст
+        sub_label = QLabel("или откройте через Ctrl+O")
+        sub_font = QFont()
+        sub_font.setPointSize(12)
+        sub_label.setFont(sub_font)
+        sub_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        sub_label.setStyleSheet("color: #666666; margin-bottom: 20px;")
+        layout.addWidget(sub_label)
+
+        # Форматы файлов
+        formats_label = QLabel("Поддерживаемые форматы:\n.las • .pcd • .laz • .h5 • .txt")
+        formats_font = QFont()
+        formats_font.setPointSize(10)
+        formats_label.setFont(formats_font)
+        formats_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        formats_label.setStyleSheet("color: #555555;")
+        layout.addWidget(formats_label)
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        """Обработка события входа перетаскиваемых данных"""
+        if event.mimeData().hasUrls():
+            # Проверяем, есть ли среди перетаскиваемых объектов файлы
+            urls = event.mimeData().urls()
+            valid_files = []
+
+            for url in urls:
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    # Проверяем расширение файла
+                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt')):
+                        valid_files.append(file_path)
+
+            if valid_files:
+                event.acceptProposedAction()
+                return
+
+        event.ignore()
+
+    def dragMoveEvent(self, event):
+        """Обработка события перемещения при перетаскивании"""
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event: QDropEvent):
+        """Обработка события сброса файлов"""
+        if event.mimeData().hasUrls() and self.main_window:
+            urls = event.mimeData().urls()
+            valid_files = []
+
+            for url in urls:
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    # Проверяем расширение файла
+                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt')):
+                        valid_files.append(file_path)
+
+            if valid_files:
+                self.main_window.add_files_to_list(valid_files)
+                event.acceptProposedAction()
+                print(f"Перетащено файлов: {len(valid_files)}")
+            else:
+                print("Нет поддерживаемых файлов для загрузки")
+                event.ignore()
+        else:
+            event.ignore()
+
+
+class DragDropListWidget(QListWidget):
+    """Кастомный QListWidget с поддержкой drag and drop"""
+
+    def __init__(self, main_window=None, parent=None):
+        super().__init__(parent)
+        self.main_window = main_window
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        """Обработка события входа перетаскиваемых данных"""
+        if event.mimeData().hasUrls():
+            # Проверяем, есть ли среди перетаскиваемых объектов файлы
+            urls = event.mimeData().urls()
+            valid_files = []
+
+            for url in urls:
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    # Проверяем расширение файла
+                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt')):
+                        valid_files.append(file_path)
+
+            if valid_files:
+                event.acceptProposedAction()
+                return
+
+        event.ignore()
+
+    def dragMoveEvent(self, event):
+        """Обработка события перемещения при перетаскивании"""
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event: QDropEvent):
+        """Обработка события сброса файлов"""
+        if event.mimeData().hasUrls() and self.main_window:
+            urls = event.mimeData().urls()
+            valid_files = []
+
+            for url in urls:
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    # Проверяем расширение файла
+                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt')):
+                        valid_files.append(file_path)
+
+            if valid_files:
+                self.main_window.add_files_to_list(valid_files)
+                event.acceptProposedAction()
+                print(f"Перетащено файлов в список: {len(valid_files)}")
+            else:
+                print("Нет поддерживаемых файлов для загрузки")
+                event.ignore()
+        else:
+            event.ignore()
 
 
 class Ui_MainWindow(object):
@@ -88,13 +261,37 @@ class Ui_MainWindow(object):
         # Добавляем горизонтальную компоновку кнопок в вертикальную компоновку
         layout.addLayout(buttons_layout)
 
-        # Добавляем QListWidget
-        self.listWidget = QListWidget()
-        layout.addWidget(self.listWidget)
+        # Создаем QStackedWidget для переключения между пустым состоянием и списком файлов
+        self.files_stack = QStackedWidget()
+
+        # Виджет пустого состояния
+        self.empty_state_widget = EmptyStateWidget(main_window=self)
+        self.files_stack.addWidget(self.empty_state_widget)
+
+        # QListWidget с поддержкой drag and drop
+        self.listWidget = DragDropListWidget(main_window=self)
+        self.listWidget.setToolTip(
+            "Перетащите файлы сюда или используйте кнопку 'Выбрать файлы'\nПоддерживаемые форматы: .las, .pcd, .laz, .h5, .txt")
+        self.files_stack.addWidget(self.listWidget)
+
+        # По умолчанию показываем пустое состояние
+        self.files_stack.setCurrentWidget(self.empty_state_widget)
+
+        layout.addWidget(self.files_stack)
 
         widget.setLayout(layout)
         dock.setWidget(widget)
         return dock
+
+    def update_empty_list_message(self):
+        """Показывает виджет пустого состояния, если нет файлов"""
+        if self.listWidget.count() == 0:
+            self.files_stack.setCurrentWidget(self.empty_state_widget)
+
+    def clear_empty_list_message(self):
+        """Переключается на список файлов, если есть файлы"""
+        if self.listWidget.count() > 0:
+            self.files_stack.setCurrentWidget(self.listWidget)
 
     def add_file_to_list_widget(self, file_path):
         # Добавляем облако точек земли в list_widget
