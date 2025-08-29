@@ -11,6 +11,7 @@ from Toolbar_Widgets.console_manager import ConsoleManager
 from menu_bar import MenuBar
 from Toolbar.tool_bar import ToolBar
 from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem
+from xlsx_viewer import XlsxViewerWidget
 
 from Toolbar_Widgets import parameters_widget
 from Toolbar_Widgets import multidiameter_widget
@@ -89,6 +90,10 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.properties_dock = None
         self.properties_widget = None
 
+        # Инициализация dock widget для просмотра Excel файлов
+        self.xlsx_viewer_dock = None
+        self.xlsx_viewer_widget = None
+
         # Включаем поддержку drag and drop
         self.setAcceptDrops(True)
 
@@ -98,7 +103,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     def select_files(self):
         # Метод для выбора файлов
         files, _ = QFileDialog.getOpenFileNames(
-            self, "Выбрать файлы", "", "PointCloud files (*.las *.pcd *.laz *.h5 *.txt)")
+            self, "Выбрать файлы", "", "All supported files (*.las *.pcd *.laz *.h5 *.txt *.xlsx);;PointCloud files (*.las *.pcd *.laz *.h5 *.txt);;Excel files (*.xlsx)")
         if files:
             self.add_files_to_list(files)
 
@@ -227,16 +232,28 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             # Показываем выбранные файлы
             displayed_count = 0
             last_displayed_file = None
+            xlsx_files = []
 
             for file_path in selected_files:
-                # Получаем настройки из выпадающих списков
-                color_field = self.color_field_combo.currentText()
-                color_palette = self.color_palette_combo.currentText()
+                if file_path.lower().endswith('.xlsx'):
+                    # Собираем xlsx файлы для отдельной обработки
+                    xlsx_files.append(file_path)
+                    displayed_count += 1
+                    last_displayed_file = file_path
+                else:
+                    # Получаем настройки из выпадающих списков
+                    color_field = self.color_field_combo.currentText()
+                    color_palette = self.color_palette_combo.currentText()
 
-                # Загружаем файл если он еще не загружен
-                self.openGLWidget.load_point_cloud(file_path, color_field, color_palette)
-                displayed_count += 1
-                last_displayed_file = file_path
+                    # Загружаем файл если он еще не загружен
+                    self.openGLWidget.load_point_cloud(file_path, color_field, color_palette)
+                    displayed_count += 1
+                    last_displayed_file = file_path
+
+            # Открываем xlsx файлы в viewer
+            if xlsx_files:
+                # Открываем последний выбранный xlsx файл
+                self.open_xlsx_viewer(xlsx_files[-1])
 
             # Обновляем панель свойств
             self.clear_properties_dock()
@@ -313,8 +330,42 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
     def checkbox_changed(self, state):
         # Убираем автоматическое отображение файлов при изменении состояния чекбокса
-        # Теперь файлы отображаются только при нажатии кнопки "Отобразить"
+        # Теперь файлы отображаются только при нажатии кнопки "Show/Hide"
         pass
+
+    def open_xlsx_viewer(self, file_path):
+        """Открывает dock widget для просмотра Excel файла справа от консоли"""
+        try:
+            # Создаем или обновляем dock widget для xlsx viewer
+            if not hasattr(self, 'xlsx_viewer_dock') or self.xlsx_viewer_dock is None:
+                from PyQt6.QtWidgets import QDockWidget
+                self.xlsx_viewer_dock = QDockWidget('Просмотр Excel файла', self)
+                self.xlsx_viewer_dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
+
+                # Создаем виджет для просмотра
+                self.xlsx_viewer_widget = XlsxViewerWidget()
+                self.xlsx_viewer_dock.setWidget(self.xlsx_viewer_widget)
+
+                # Добавляем dock widget в нижнюю область рядом с консолью
+                self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.xlsx_viewer_dock)
+
+                # Размещаем xlsx viewer справа от консоли в нижней области
+                self.splitDockWidget(self.console_dock_widget, self.xlsx_viewer_dock, Qt.Orientation.Horizontal)
+
+                # Устанавливаем размеры dock widgets: консоль - половина экрана, xlsx viewer - половина экрана
+                screen_width = QApplication.primaryScreen().geometry().width()
+                half_width = screen_width // 2
+                self.resizeDocks([self.console_dock_widget, self.xlsx_viewer_dock], [half_width, half_width], Qt.Orientation.Horizontal)
+
+            # Загружаем файл в виджет просмотра
+            self.xlsx_viewer_widget.load_file(file_path)
+
+            # Показываем dock widget
+            self.xlsx_viewer_dock.show()
+            self.xlsx_viewer_dock.raise_()
+
+        except Exception as e:
+            QMessageBox.warning(self, "Ошибка", f"Не удалось открыть Excel файл:\n{str(e)}")
 
     def update_properties_dock(self, file_path):
         # Очищаем только свойства файла
@@ -469,7 +520,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
                     # Проверяем расширение файла
-                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt')):
+                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt', '.xlsx')):
                         valid_files.append(file_path)
 
             if valid_files:
@@ -495,7 +546,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
                     # Проверяем расширение файла
-                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt')):
+                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt', '.xlsx')):
                         valid_files.append(file_path)
 
             if valid_files:

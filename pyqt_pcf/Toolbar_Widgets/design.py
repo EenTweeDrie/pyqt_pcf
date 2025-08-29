@@ -66,7 +66,7 @@ class EmptyStateWidget(QWidget):
         layout.addWidget(sub_label)
 
         # Форматы файлов
-        formats_label = QLabel("Поддерживаемые форматы:\n.las • .pcd • .laz • .h5 • .txt")
+        formats_label = QLabel("Поддерживаемые форматы:\n.las • .pcd • .laz • .h5 • .txt • .xlsx")
         formats_font = QFont()
         formats_font.setPointSize(10)
         formats_label.setFont(formats_font)
@@ -85,7 +85,7 @@ class EmptyStateWidget(QWidget):
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
                     # Проверяем расширение файла
-                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt')):
+                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt', '.xlsx')):
                         valid_files.append(file_path)
 
             if valid_files:
@@ -111,7 +111,7 @@ class EmptyStateWidget(QWidget):
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
                     # Проверяем расширение файла
-                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt')):
+                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt', '.xlsx')):
                         valid_files.append(file_path)
 
             if valid_files:
@@ -144,7 +144,7 @@ class DragDropListWidget(QListWidget):
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
                     # Проверяем расширение файла
-                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt')):
+                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt', '.xlsx')):
                         valid_files.append(file_path)
 
             if valid_files:
@@ -170,7 +170,7 @@ class DragDropListWidget(QListWidget):
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
                     # Проверяем расширение файла
-                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt')):
+                    if file_path.lower().endswith(('.las', '.pcd', '.laz', '.h5', '.txt', '.xlsx')):
                         valid_files.append(file_path)
 
             if valid_files:
@@ -323,7 +323,7 @@ class Ui_MainWindow(object):
         # QListWidget с поддержкой drag and drop
         self.listWidget = DragDropListWidget(main_window=self)
         self.listWidget.setToolTip(
-            "Перетащите файлы сюда или используйте кнопку 'Выбрать файлы'\nПоддерживаемые форматы: .las, .pcd, .laz, .h5, .txt")
+            "Перетащите файлы сюда или используйте кнопку 'Выбрать файлы'\nПоддерживаемые форматы: .las, .pcd, .laz, .h5, .txt, .xlsx")
         self.files_stack.addWidget(self.listWidget)
 
         # По умолчанию показываем пустое состояние
