@@ -10,10 +10,20 @@ from .base_widget import create_dock_widget
 
 def parameters_dock_widget(self):
     """Возвращает (и кэширует) QDockWidget для расчета параметров."""
-    default_params = {
-        # 'intensity_cut': 3000,
-        # 'height_threshold': 1.5
-    }
+
+    # Загружаем только активные параметры из YAML файла
+    config_path = os.path.join(os.path.dirname(__file__), 'parameters_config.yaml')
+    default_params = {}
+
+    try:
+        if os.path.exists(config_path):
+            with open(config_path, 'r', encoding='utf-8') as file:
+                loaded_params = yaml.safe_load(file)
+                if loaded_params:
+                    default_params = loaded_params
+    except Exception as e:
+        print(f"Ошибка при загрузке конфигурации параметров: {e}")
+        default_params = {}
     return create_dock_widget(
         self,
         name='parameters',

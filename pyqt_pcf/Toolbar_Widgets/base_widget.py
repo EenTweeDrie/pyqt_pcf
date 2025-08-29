@@ -48,8 +48,11 @@ def create_dock_widget(self, name, title, button_text, process_func, output_file
         yaml_label = QLabel("Конфигурация обработки (YAML):")
         right_layout.addWidget(yaml_label)
         yaml_editor = QTextEdit()
-        default_yaml = yaml.dump(default_params, sort_keys=False)
+
+        # Отображаем только активные параметры без комментариев
+        default_yaml = yaml.dump(default_params, sort_keys=False, default_flow_style=False)
         yaml_editor.setPlainText(default_yaml)
+
         right_layout.addWidget(yaml_editor)
         content_layout.addWidget(right_panel)
         widget.yaml_editor = yaml_editor

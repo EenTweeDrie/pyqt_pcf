@@ -3,16 +3,27 @@
 import os
 import numpy as np
 import pandas as pd
+import yaml
 from pc_forestry.pcd.TREE import TREE
 from .base_widget import create_dock_widget
 
 
 def multidiameter_dock_widget(self):
     """Возвращает (и кэширует) QDockWidget для расчета диаметров многоствольных деревьев."""
-    default_params = {
-        # 'intensity_cut': 3000,
-        # 'height_threshold': 1.5
-    }
+
+    # Загружаем только активные параметры из YAML файла
+    config_path = os.path.join(os.path.dirname(__file__), 'multidiameter_config.yaml')
+    default_params = {}
+
+    try:
+        if os.path.exists(config_path):
+            with open(config_path, 'r', encoding='utf-8') as file:
+                loaded_params = yaml.safe_load(file)
+                if loaded_params:
+                    default_params = loaded_params
+    except Exception as e:
+        print(f"Ошибка при загрузке конфигурации многоствольных диаметров: {e}")
+        default_params = {}
     return create_dock_widget(
         self,
         name='multidiameter',

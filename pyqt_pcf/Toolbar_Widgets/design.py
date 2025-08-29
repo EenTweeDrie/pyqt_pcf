@@ -2,7 +2,7 @@ import os
 
 from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtWidgets import (QHBoxLayout, QListWidget, QDockWidget,
-                             QListWidgetItem, QCheckBox, QVBoxLayout, QWidget, QPushButton, QLabel, QStackedWidget)
+                             QListWidgetItem, QCheckBox, QVBoxLayout, QWidget, QPushButton, QLabel, QStackedWidget, QComboBox, QGroupBox, QFormLayout)
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QFont, QPixmap
 
@@ -62,7 +62,7 @@ class EmptyStateWidget(QWidget):
         sub_font.setPointSize(12)
         sub_label.setFont(sub_font)
         sub_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sub_label.setStyleSheet("color: #666666; margin-bottom: 20px;")
+        sub_label.setStyleSheet("color: #777777; margin-bottom: 20px;")
         layout.addWidget(sub_label)
 
         # Форматы файлов
@@ -231,9 +231,55 @@ class Ui_MainWindow(object):
         dock = QDockWidget('Свойства')
         dock.setAllowedAreas(QtCore.Qt.DockWidgetArea.AllDockWidgetAreas)
         widget = QWidget()
-        layout = QVBoxLayout()
-        self.properties_layout = layout  # Сохраняем ссылку на layout для обновления
-        widget.setLayout(layout)
+        main_layout = QVBoxLayout()
+
+        # Создаем группу "Свойства отображения"
+        display_group = QGroupBox("Свойства отображения")
+        display_layout = QFormLayout()
+
+        # Выпадающий список для цветовой палитры
+        self.color_palette_combo = QComboBox()
+        self.color_palette_combo.addItems([
+            "Blue > Green > Yellow > Red",
+            "Grey",
+            "Viridis",
+            "Brown > Yellow",
+            "Yellow > Brown",
+            "Topo landserf",
+            "High contrast",
+            "Cividis",
+            "Blue > White > Red",
+            "Red > Yellow"
+        ])
+        display_layout.addRow("Цветовая палитра:", self.color_palette_combo)
+
+        # Выпадающий список для поля цвета
+        self.color_field_combo = QComboBox()
+        self.color_field_combo.addItems([
+            "intensity",
+            "rgb",
+            "z",
+            "normals",
+            "original_cloud_index",
+            "gps_time",
+            "illuminance"
+        ])
+        display_layout.addRow("Поле цвета:", self.color_field_combo)
+
+        display_group.setLayout(display_layout)
+        main_layout.addWidget(display_group)
+
+        # Создаем группу "Свойства файла"
+        file_group = QGroupBox("Свойства файла")
+        file_layout = QFormLayout()
+        file_group.setLayout(file_layout)
+        main_layout.addWidget(file_group)
+
+        # Сохраняем ссылки на layouts для обновления
+        self.properties_layout = main_layout
+        self.file_properties_layout = file_layout
+
+        widget.setLayout(main_layout)
         dock.setWidget(widget)
         return dock
 
@@ -251,6 +297,12 @@ class Ui_MainWindow(object):
         self.select_all_button.setShortcut("Ctrl+A")
         self.select_all_button.setToolTip("Ctrl+A")
         buttons_layout.addWidget(self.select_all_button)
+
+        # Добавляем кнопку "Show/Hide"
+        self.display_button = QPushButton("Show/Hide")
+        self.display_button.setShortcut("Ctrl+R")
+        self.display_button.setToolTip("Показать/скрыть выбранные объекты (Ctrl+R)")
+        buttons_layout.addWidget(self.display_button)
 
         # Добавляем кнопку "Удалить"
         self.remove_button = QPushButton("Удалить")

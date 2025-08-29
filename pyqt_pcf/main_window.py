@@ -4,7 +4,7 @@ import pandas as pd
 from OpenGL.GL import glDeleteBuffers
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QIcon, QDragEnterEvent, QDropEvent
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QListWidgetItem, QCheckBox, QApplication, QLabel, QPushButton, QMessageBox
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QListWidgetItem, QCheckBox, QApplication, QLabel, QPushButton, QMessageBox, QComboBox, QGroupBox, QFormLayout
 from config import base_path
 from Toolbar_Widgets.design import Ui_MainWindow
 from Toolbar_Widgets.console_manager import ConsoleManager
@@ -74,8 +74,14 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         # Подключаем кнопку и обработчик
         self.select_all_button.clicked.connect(self.toggle_select_all)
+        # Подключаем обработчик события нажатия кнопки "Show/Hide"
+        self.display_button.clicked.connect(self.toggle_selected_files_visibility)
         # Подключаем обработчик события нажатия кнопки "Удалить"
         self.remove_button.clicked.connect(self.remove_selected_items)
+
+        # Подключаем обработчики изменений в выпадающих списках свойств
+        self.color_palette_combo.currentTextChanged.connect(self.on_display_settings_changed)
+        self.color_field_combo.currentTextChanged.connect(self.on_display_settings_changed)
 
         self.selected_files = []
 
@@ -172,6 +178,98 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         # Если список стал пустым, показываем сообщение-подсказку
         self.update_empty_list_message()
 
+    def toggle_selected_files_visibility(self):
+        """Переключает видимость выбранных файлов (показать/скрыть)"""
+        selected_files = []
+
+        # Собираем список выбранных файлов
+        for index in range(self.listWidget.count()):
+            item = self.listWidget.item(index)
+            checkbox = self.listWidget.itemWidget(item)
+            if checkbox and checkbox.isChecked():
+                file_path = checkbox.property("filePath")
+                if file_path:
+                    selected_files.append(file_path)
+
+        if not selected_files:
+            print("Нет выбранных файлов")
+            return
+
+        # Определяем, есть ли среди выбранных файлов видимые
+        any_visible = False
+        for file_path in selected_files:
+            if file_path in self.openGLWidget.point_clouds:
+                if self.openGLWidget.point_clouds[file_path]['active']:
+                    any_visible = True
+                    break
+            elif file_path in self.openGLWidget.models:
+                if self.openGLWidget.models[file_path]['active']:
+                    any_visible = True
+                    break
+
+        # Если есть видимые файлы - скрываем все выбранные
+        # Если все скрыты - показываем все выбранные
+        if any_visible:
+            # Скрываем выбранные файлы
+            hidden_count = 0
+            for file_path in selected_files:
+                if file_path in self.openGLWidget.point_clouds:
+                    self.openGLWidget.point_clouds[file_path]['active'] = False
+                    hidden_count += 1
+                elif file_path in self.openGLWidget.models:
+                    self.openGLWidget.models[file_path]['active'] = False
+                    hidden_count += 1
+
+            # Очищаем панель свойств
+            self.clear_properties_dock()
+            print(f"Скрыто файлов: {hidden_count}")
+        else:
+            # Показываем выбранные файлы
+            displayed_count = 0
+            last_displayed_file = None
+
+            for file_path in selected_files:
+                # Получаем настройки из выпадающих списков
+                color_field = self.color_field_combo.currentText()
+                color_palette = self.color_palette_combo.currentText()
+
+                # Загружаем файл если он еще не загружен
+                self.openGLWidget.load_point_cloud(file_path, color_field, color_palette)
+                displayed_count += 1
+                last_displayed_file = file_path
+
+            # Обновляем панель свойств
+            self.clear_properties_dock()
+            if displayed_count == 1 and last_displayed_file:
+                self.update_properties_dock(last_displayed_file)
+            elif displayed_count > 1:
+                self.file_properties_layout.addRow("Статус:", QLabel(f"Отображено файлов: {displayed_count}"))
+
+            print(f"Отображено файлов: {displayed_count}")
+
+        # Обновляем отображение
+        self.openGLWidget.update()
+
+    def on_display_settings_changed(self):
+        """Обработчик изменения настроек отображения"""
+        # Перезагружаем все активные файлы с новыми настройками
+        for file_path in list(self.openGLWidget.point_clouds.keys()):
+            if self.openGLWidget.point_clouds[file_path]['active']:
+                # Удаляем старые VBO данные
+                if file_path in self.openGLWidget.vbo_data:
+                    vbo_info = self.openGLWidget.vbo_data[file_path]
+                    self.delete_vbo(vbo_info)
+                    del self.openGLWidget.vbo_data[file_path]
+
+                # Получаем текущие настройки и перезагружаем
+                color_field = self.color_field_combo.currentText()
+                color_palette = self.color_palette_combo.currentText()
+                self.openGLWidget.load_point_cloud(file_path, color_field, color_palette)
+
+        # Обновляем отображение
+        self.openGLWidget.update()
+        print("Настройки отображения изменены")
+
     def focus_on_selected_item(self):
         # Сначала проверяем текущий выделенный элемент
         currentItem = self.listWidget.currentItem()
@@ -214,49 +312,66 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             glDeleteBuffers(1, [int(color_vbo)])
 
     def checkbox_changed(self, state):
-        checkbox = self.sender()
-        if checkbox:
-            file_path = checkbox.property("filePath")
-            if state == 2:  # Checkbox is checked
-                self.openGLWidget.load_point_cloud(file_path)
-                self.update_properties_dock(file_path)
-
-            elif state == 0:  # Checkbox is unchecked
-                if file_path in self.openGLWidget.point_clouds:
-                    self.openGLWidget.point_clouds[file_path]['active'] = False
-                    self.openGLWidget.update()
-                    self.clear_properties_dock()
-                elif file_path in self.openGLWidget.models:
-                    self.openGLWidget.models[file_path]['active'] = False
-                    self.openGLWidget.update()
-                    self.clear_properties_dock()
+        # Убираем автоматическое отображение файлов при изменении состояния чекбокса
+        # Теперь файлы отображаются только при нажатии кнопки "Отобразить"
+        pass
 
     def update_properties_dock(self, file_path):
+        # Очищаем только свойства файла
+        self.clear_file_properties()
+
         if file_path in self.openGLWidget.point_clouds:
             if self.openGLWidget.point_clouds[file_path]['active']:
                 num_points = self.openGLWidget.vbo_data[file_path][2]
-                self.clear_properties_dock()
-                file_label = QLabel(f"Файл: {os.path.basename(file_path)}")
-                num_points_label = QLabel(f"Количество точек: {num_points}")
-                self.properties_layout.addWidget(file_label)
-                self.properties_layout.addWidget(num_points_label)
-        if file_path in self.openGLWidget.models:
+
+                # Добавляем свойства файла в таблицу
+                self.file_properties_layout.addRow("Имя файла:", QLabel(os.path.basename(file_path)))
+                self.file_properties_layout.addRow("Полный путь:", QLabel(file_path))
+                self.file_properties_layout.addRow("Количество точек:", QLabel(str(num_points)))
+
+                # Добавляем информацию о размере файла
+                if os.path.exists(file_path):
+                    file_size = os.path.getsize(file_path)
+                    if file_size > 1024*1024:
+                        size_str = f"{file_size/(1024*1024):.1f} МБ"
+                    elif file_size > 1024:
+                        size_str = f"{file_size/1024:.1f} КБ"
+                    else:
+                        size_str = f"{file_size} байт"
+                    self.file_properties_layout.addRow("Размер файла:", QLabel(size_str))
+
+        elif file_path in self.openGLWidget.models:
             if self.openGLWidget.models[file_path]['active']:
                 triangles = self.openGLWidget.vbo_data_models[file_path][2] / 3
 
-                self.clear_properties_dock()
-                file_label = QLabel(f"Файл: {os.path.basename(file_path)}")
-                num_points_label = QLabel(
-                    f"Количество полигонов: {int(triangles)}")
-                self.properties_layout.addWidget(file_label)
-                self.properties_layout.addWidget(num_points_label)
+                # Добавляем свойства модели в таблицу
+                self.file_properties_layout.addRow("Имя файла:", QLabel(os.path.basename(file_path)))
+                self.file_properties_layout.addRow("Полный путь:", QLabel(file_path))
+                self.file_properties_layout.addRow("Количество полигонов:", QLabel(str(int(triangles))))
+
+                # Добавляем информацию о размере файла
+                if os.path.exists(file_path):
+                    file_size = os.path.getsize(file_path)
+                    if file_size > 1024*1024:
+                        size_str = f"{file_size/(1024*1024):.1f} МБ"
+                    elif file_size > 1024:
+                        size_str = f"{file_size/1024:.1f} КБ"
+                    else:
+                        size_str = f"{file_size} байт"
+                    self.file_properties_layout.addRow("Размер файла:", QLabel(size_str))
 
     def clear_properties_dock(self):
-        if self.properties_layout:
-            for i in reversed(range(self.properties_layout.count())):
-                widget = self.properties_layout.itemAt(i).widget()
-                if widget:
-                    widget.setParent(None)
+        # Очищаем только свойства файла, оставляя элементы управления отображением
+        self.clear_file_properties()
+
+    def clear_file_properties(self):
+        """Очищает только свойства файла, оставляя элементы управления"""
+        if hasattr(self, 'file_properties_layout') and self.file_properties_layout:
+            # Удаляем все строки из FormLayout
+            while self.file_properties_layout.count():
+                child = self.file_properties_layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
 
     def toggle_dock_widget(self, dock_widget_name, dock_area):
         action = None

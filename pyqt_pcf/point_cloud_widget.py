@@ -8,6 +8,8 @@ import laspy
 import pywavefront
 import os
 from pc_forestry.pcd.PCD import PCD
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 
 class OpenGLWidget(QOpenGLWidget):
@@ -32,27 +34,118 @@ class OpenGLWidget(QOpenGLWidget):
         self.vbo_data = {}
         self.vbo_data_models = {}
 
-    def to_VBO(self, pc: PCD, color_field: str = 'intensity'):
+    def to_VBO(self, pc: PCD, color_field: str = 'intensity', color_palette: str = 'Grey'):
         points = pc.points
 
         if color_field == 'rgb' and pc.rgb.size > 0:
             colors = pc.rgb / 255.0
+        elif color_field == 'z':
+            # Используем Z координату для окрашивания
+            field_values = points[:, 2]  # Z координата
+            # Нормализуем значения от 0 до 1
+            if field_values.max() != field_values.min():
+                field_values = (field_values - field_values.min()) / \
+                    (field_values.max() - field_values.min())
+            else:
+                field_values = np.zeros_like(field_values)
+
+            # Применяем цветовую палитру
+            colors = self.apply_color_palette(field_values, color_palette)
+        elif color_field == 'normals' and hasattr(pc, 'normals') and pc.normals.size > 0:
+            # Используем нормали для окрашивания (берем длину вектора нормали)
+            normals = np.asarray(pc.normals)
+            field_values = np.linalg.norm(normals, axis=1)
+            # Нормализуем значения от 0 до 1
+            if field_values.max() != field_values.min():
+                field_values = (field_values - field_values.min()) / \
+                    (field_values.max() - field_values.min())
+            else:
+                field_values = np.zeros_like(field_values)
+
+            # Применяем цветовую палитру
+            colors = self.apply_color_palette(field_values, color_palette)
         elif hasattr(pc, color_field) and getattr(pc, color_field).size > 0:
             field_values = np.asarray(getattr(pc, color_field))
-            field_values = (field_values - field_values.min()) / \
-                (field_values.max() - field_values.min())
-            colors = np.zeros((field_values.shape[0], 3))
-            colors[:, 0] = field_values  # r
-            colors[:, 1] = field_values  # g
-            colors[:, 2] = field_values  # b
+            # Нормализуем значения от 0 до 1
+            if field_values.max() != field_values.min():
+                field_values = (field_values - field_values.min()) / \
+                    (field_values.max() - field_values.min())
+            else:
+                field_values = np.zeros_like(field_values)
+
+            # Применяем цветовую палитру
+            colors = self.apply_color_palette(field_values, color_palette)
         else:
+            # По умолчанию белый цвет
             colors = np.ones_like(points)
 
         point_vbo = vbo.VBO(np.array(points, dtype=np.float32))
         color_vbo = vbo.VBO(np.array(colors, dtype=np.float32))
         return point_vbo, color_vbo, len(points)
 
-    def load_point_cloud(self, filename):
+    def apply_color_palette(self, values, palette_name):
+        """Применяет цветовую палитру к нормализованным значениям"""
+        colors = np.zeros((len(values), 3))
+
+        if palette_name == "Blue > Green > Yellow > Red":
+            # Создаем кастомную палитру: синий -> зеленый -> желтый -> красный
+            colors[:, 0] = np.where(values < 0.5, 0, 2 * values - 1)  # красный компонент
+            colors[:, 1] = np.where(values < 0.5, 2 * values, 2 - 2 * values)  # зеленый компонент
+            colors[:, 2] = np.where(values < 0.5, 1 - 2 * values, 0)  # синий компонент
+        elif palette_name == "Grey":
+            colors[:, 0] = values  # r
+            colors[:, 1] = values  # g
+            colors[:, 2] = values  # b
+        elif palette_name == "Viridis":
+            colormap = cm.viridis(values)
+            colors = colormap[:, :3]
+        elif palette_name == "Brown > Yellow":
+            # Коричневый -> желтый
+            colors[:, 0] = 0.4 + 0.6 * values  # r: от коричневого к желтому
+            colors[:, 1] = 0.2 + 0.8 * values  # g: от коричневого к желтому
+            colors[:, 2] = 0.1 * (1 - values)  # b: убираем синий
+        elif palette_name == "Yellow > Brown":
+            # Желтый -> коричневый (обратный)
+            colors[:, 0] = 1.0 - 0.6 * values  # r: от желтого к коричневому
+            colors[:, 1] = 1.0 - 0.8 * values  # g: от желтого к коричневому
+            colors[:, 2] = 0.1 * values        # b: добавляем синий
+        elif palette_name == "Topo landserf":
+            # Топографическая палитра: синий -> зеленый -> коричневый -> белый
+            if len(values) > 0:
+                colors[:, 0] = np.where(values < 0.33, 0.2,
+                                        np.where(values < 0.66, 0.4 + 0.6 * (values - 0.33) / 0.33,
+                                                 0.8 + 0.2 * (values - 0.66) / 0.34))
+                colors[:, 1] = np.where(values < 0.33, 0.4 + 0.6 * values / 0.33,
+                                        np.where(values < 0.66, 0.8 - 0.4 * (values - 0.33) / 0.33,
+                                                 0.6 + 0.4 * (values - 0.66) / 0.34))
+                colors[:, 2] = np.where(values < 0.33, 0.8 - 0.6 * values / 0.33,
+                                        np.where(values < 0.66, 0.2, 0.2 + 0.8 * (values - 0.66) / 0.34))
+        elif palette_name == "High contrast":
+            # Высококонтрастная палитра
+            colors[:, 0] = np.where(values < 0.5, 0, 1)  # черный/красный
+            colors[:, 1] = np.where(values < 0.5, values * 2, 1 - (values - 0.5) * 2)  # градиент зеленого
+            colors[:, 2] = np.where(values < 0.5, 1 - values * 2, 0)  # синий/черный
+        elif palette_name == "Cividis":
+            colormap = cm.cividis(values)
+            colors = colormap[:, :3]
+        elif palette_name == "Blue > White > Red":
+            # Синий -> белый -> красный (coolwarm style)
+            colormap = cm.coolwarm(values)
+            colors = colormap[:, :3]
+        elif palette_name == "Red > Yellow":
+            # Красный -> желтый
+            colors[:, 0] = 1.0  # r всегда максимальный
+            colors[:, 1] = values  # g растет от 0 до 1
+            colors[:, 2] = 0.0  # b всегда 0
+        else:
+            # По умолчанию серый
+            colors[:, 0] = values
+            colors[:, 1] = values
+            colors[:, 2] = values
+
+        return colors
+
+    def load_point_cloud(self, filename, color_field='intensity', color_palette='Grey'):
         if filename not in self.point_clouds:
             self.point_clouds[filename] = {'active': False, 'data': None}
 
@@ -75,7 +168,7 @@ class OpenGLWidget(QOpenGLWidget):
                 del self.point_clouds[filename]
             return
 
-        point_vbo, color_vbo, num_points = self.to_VBO(pc)
+        point_vbo, color_vbo, num_points = self.to_VBO(pc, color_field, color_palette)
 
         self.vbo_data[filename] = (point_vbo, color_vbo, num_points)
         self.point_clouds[filename] = {'active': True, 'data': pc.points}
