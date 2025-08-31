@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyqt-pcf"
-version = "0.2.0"
+version = "0.2.1"
 description = ""
 authors = ["EenTweeDrie <eentweedrie@yandex.ru>"]
 license = "MIT"

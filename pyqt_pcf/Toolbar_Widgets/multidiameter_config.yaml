@@ -1,7 +1,10 @@
 # Конфигурация параметров для расчета диаметров многоствольных деревьев
-# Раскомментируйте и настройте нужные параметры:
 
-intensity_cut: 3000
-height_threshold: 1.5
-min_trunk_diameter: 5.0
-max_trunk_distance: 2.0 
+device: 'cuda'
+find_trunk_ml:
+  feature_params:
+    illuminance:
+      num_rays: 4
+      max_ray_distance: 0.5
+      ao_neighbor_radius: 0.02
+  proba_threshold: 0.5
