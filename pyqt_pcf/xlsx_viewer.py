@@ -134,37 +134,37 @@ class XlsxViewerWidget(QWidget):
             }
         """)
 
-        # Заголовок
-        self.title_label = QLabel("Просмотр Excel файла")
-        self.title_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        # Панель управления
+        # Панель управления с заголовком и кнопками
         control_layout = QHBoxLayout()
 
-        # Выбор листа
+        # Заголовок слева
+        self.title_label = QLabel("Просмотр Excel файла")
+        self.title_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        control_layout.addWidget(self.title_label)
+
+        # Добавляем растяжение для разделения заголовка и кнопок
+        control_layout.addStretch()
+
+        # Информационная панель (справа)
+        self.info_label = QLabel("")
+        self.info_label.setStyleSheet("color: #888; font-size: 12px;")
+        control_layout.addWidget(self.info_label)
+
+        # Выбор листа (справа)
         control_layout.addWidget(QLabel("Лист:"))
         self.sheet_combo = QComboBox()
         self.sheet_combo.currentTextChanged.connect(self.load_sheet)
         control_layout.addWidget(self.sheet_combo)
 
-        # Кнопка обновления
+        # Кнопка обновления (справа)
         self.refresh_button = QPushButton("Обновить")
         self.refresh_button.clicked.connect(self.refresh_data)
         control_layout.addWidget(self.refresh_button)
 
-        control_layout.addWidget(self.title_label)
-
-        control_layout.addStretch()
         layout.addLayout(control_layout)
 
         # Информационная панель
-        info_layout = QHBoxLayout()
-        self.info_label = QLabel("")
-        self.info_label.setStyleSheet("color: #777; font-size: 10px;")
-        info_layout.addWidget(self.info_label)
-        info_layout.addStretch()
-        layout.addLayout(info_layout)
 
         # Таблица для отображения данных
         self.table = QTableWidget()
